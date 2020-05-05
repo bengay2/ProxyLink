@@ -7,6 +7,7 @@ import com.blockbyblockwest.fest.proxylink.exception.ServiceException;
 import com.blockbyblockwest.fest.proxylink.models.BackendServer;
 import com.blockbyblockwest.fest.proxylink.models.LinkedProxyServer;
 import com.blockbyblockwest.fest.proxylink.models.NetworkPingData;
+import com.blockbyblockwest.fest.proxylink.redis.models.BackendServerResponse;
 import com.blockbyblockwest.fest.proxylink.redis.models.RedisBackendServer;
 import com.blockbyblockwest.fest.proxylink.redis.models.RedisLinkedProxyServer;
 import com.blockbyblockwest.fest.proxylink.redis.models.RedisPingData;
@@ -14,6 +15,7 @@ import com.blockbyblockwest.fest.proxylink.redis.pubsub.LocalNetworkState;
 import com.blockbyblockwest.fest.proxylink.redis.pubsub.NetworkPubSub;
 import com.blockbyblockwest.fest.proxylink.redis.pubsub.packet.BackendServerRegisterPacket;
 import com.blockbyblockwest.fest.proxylink.redis.pubsub.packet.BackendServerUnregisterPacket;
+import com.blockbyblockwest.fest.proxylink.redis.pubsub.packet.BackendServerUpdatePlayerCountPacket;
 import com.blockbyblockwest.fest.proxylink.redis.pubsub.packet.NetworkBroadcastPacket;
 import com.blockbyblockwest.fest.proxylink.redis.pubsub.packet.UserDisconnectPacket;
 import com.blockbyblockwest.fest.proxylink.redis.pubsub.packet.UserKickPacket;
@@ -23,8 +25,10 @@ import com.blockbyblockwest.fest.proxylink.redis.pubsub.packet.UserSwitchServerR
 import com.blockbyblockwest.fest.proxylink.user.MessageType;
 import com.blockbyblockwest.fest.proxylink.util.TimeUtil;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -153,13 +157,79 @@ public class RedisNetworkService implements NetworkService {
     }
   }
 
-  @Override
-  public Collection<? extends BackendServer> getServers() throws ServiceException {
-    return null;
+  private Set<String> getServerIds(Jedis jedis) throws ServiceException {
+    return jedis.zrangeByScore(NetworkKey.SERVER_SET, System.currentTimeMillis(),
+        Double.POSITIVE_INFINITY);
+  }
+
+  private Collection<? extends BackendServer> getServerDatas(Jedis jedis, Collection<String> ids) {
+
+    Collection<BackendServerResponse> responseMap = new ArrayList<>(ids.size());
+
+    Pipeline pipe = jedis.pipelined();
+
+    for (String id : ids) {
+      String primKey = NetworkKey.getServerKey(id);
+
+      Response<Map<String, String>> mapResponse = pipe.hgetAll(primKey);
+      responseMap.add(new BackendServerResponse(id, mapResponse));
+    }
+
+    pipe.sync();
+
+    Collection<RedisBackendServer> result = responseMap.stream()
+        .map(BackendServerResponse::toServer)
+        .collect(Collectors.toList());
+
+    for (RedisBackendServer server : result) {
+      localNetworkState.getServerInfo().put(server.getId(), server);
+    }
+
+    return result;
   }
 
   @Override
-  public Optional<BackendServer> getServerData(String id) throws ServiceException {
+  public Collection<? extends BackendServer> getServers() throws ServiceException {
+    try (Jedis jedis = jedisPool.getResource()) {
+      Set<String> serverIds = getServerIds(jedis);
+
+      if (localNetworkState.getServerInfo().size() == serverIds.size()) { // Assume our cache good
+        return localNetworkState.getServerInfo().values();
+      }
+
+      return getServerDatas(jedis, serverIds);
+    } catch (JedisException ex) {
+      throw new ServiceException(ex);
+    }
+  }
+
+  @Override
+  public Optional<BackendServer> getServer(String id) throws ServiceException {
+    RedisBackendServer server = localNetworkState.getServerInfo(id);
+    if (server != null) {
+      return Optional.of(server);
+    }
+
+    try (Jedis jedis = jedisPool.getResource()) {
+      String serverKey = NetworkKey.getServerKey(id);
+      Map<String, String> serverInfo = jedis.hgetAll(serverKey);
+
+      if (!serverInfo.isEmpty()) {
+        ServerType serverType = ServerType.valueOf(serverInfo.get(NetworkKey.SERVER_TYPE));
+        server = new RedisBackendServer(id, serverType, serverInfo.get(NetworkKey.SERVER_HOST),
+            Integer.parseInt(serverInfo.get(NetworkKey.SERVER_PORT)),
+            Integer.parseInt(serverInfo.get(NetworkKey.SERVER_MAX_PLAYER_COUNT)));
+        server.setPlayerCount(Integer.parseInt(serverInfo.get(NetworkKey.SERVER_PLAYER_COUNT)));
+
+        // Update local state
+        localNetworkState.getServerInfo().put(id, server);
+
+        return Optional.of(server);
+      }
+    } catch (JedisException ex) {
+      throw new ServiceException(ex);
+    }
+
     return Optional.empty();
   }
 
@@ -188,9 +258,14 @@ public class RedisNetworkService implements NetworkService {
   }
 
   @Override
-  public void serverHeartBeat(String id) throws ServiceException {
+  public void serverHeartBeat(String id, int playerCount) throws ServiceException {
     try (Jedis jedis = jedisPool.getResource()) {
-      jedis.zadd(NetworkKey.SERVER_SET, System.currentTimeMillis() + SERVER_TIMEOUT_MILLIS, id);
+      Pipeline pipe = jedis.pipelined();
+      pipe.zadd(NetworkKey.SERVER_SET, System.currentTimeMillis() + SERVER_TIMEOUT_MILLIS, id);
+      pipe.hset(NetworkKey.getServerKey(id), NetworkKey.SERVER_PLAYER_COUNT,
+          String.valueOf(playerCount));
+      new BackendServerUpdatePlayerCountPacket(id, playerCount).publish(pipe);
+      pipe.sync();
     } catch (JedisException ex) {
       throw new ServiceException(ex);
     }
@@ -201,6 +276,7 @@ public class RedisNetworkService implements NetworkService {
     try (Jedis jedis = jedisPool.getResource()) {
       Transaction multi = jedis.multi();
       multi.zrem(NetworkKey.SERVER_SET, id);
+      multi.del(NetworkKey.getServerKey(id));
       new BackendServerUnregisterPacket(id).publish(multi);
       multi.exec();
     } catch (JedisException ex) {
@@ -227,12 +303,13 @@ public class RedisNetworkService implements NetworkService {
 
     try (Jedis jedis = jedisPool.getResource()) {
       Transaction multi = jedis.multi();
-      String primKey = NetworkKey.SERVER_INFO + ":" + id;
+      String primKey = NetworkKey.SERVER_NAMESPACE + ":" + id;
 
-      multi.hset(primKey, NetworkKey.SERVER_INFO_TYPE, serverType.toString());
-      multi.hset(primKey, NetworkKey.SERVER_INFO_HOST, host);
-      multi.hset(primKey, NetworkKey.SERVER_INFO_PORT, String.valueOf(port));
-      multi.hset(primKey, NetworkKey.SERVER_INFO_MAXPLAYERCOUNT, String.valueOf(maxPlayerCount));
+      multi.hset(primKey, NetworkKey.SERVER_TYPE, serverType.toString());
+      multi.hset(primKey, NetworkKey.SERVER_HOST, host);
+      multi.hset(primKey, NetworkKey.SERVER_PORT, String.valueOf(port));
+      multi.hset(primKey, NetworkKey.SERVER_MAX_PLAYER_COUNT, String.valueOf(maxPlayerCount));
+      multi.hset(primKey, NetworkKey.SERVER_PLAYER_COUNT, String.valueOf(0));
 
       RedisBackendServer serverData = new RedisBackendServer(id, serverType, host, port,
           maxPlayerCount);

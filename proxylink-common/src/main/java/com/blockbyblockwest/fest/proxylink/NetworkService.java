@@ -89,7 +89,7 @@ public interface NetworkService {
    */
   Collection<? extends BackendServer> getServers() throws ServiceException;
 
-  Optional<BackendServer> getServerData(String id) throws ServiceException;
+  Optional<BackendServer> getServer(String id) throws ServiceException;
 
   /**
    * This method is called periodically by all proxies participating in this network.
@@ -111,9 +111,10 @@ public interface NetworkService {
    * This method is called periodically by all servers participating in this network.
    *
    * @param id identifier of the server
+   * @param playerCount the servers current player count
    * @throws ServiceException if a connection to the backend fails
    */
-  void serverHeartBeat(String id) throws ServiceException;
+  void serverHeartBeat(String id, int playerCount) throws ServiceException;
 
   /**
    * Called by a backend when they disconnect from the network.

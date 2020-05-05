@@ -2,10 +2,12 @@ package com.blockbyblockwest.fest.proxylink.redis.pubsub;
 
 import com.blockbyblockwest.fest.proxylink.EventExecutor;
 import com.blockbyblockwest.fest.proxylink.redis.NetworkKey;
+import com.blockbyblockwest.fest.proxylink.redis.models.RedisBackendServer;
 import com.blockbyblockwest.fest.proxylink.redis.pubsub.base.GenericPacketPubSub;
 import com.blockbyblockwest.fest.proxylink.redis.pubsub.base.packet.PubSubPacket;
 import com.blockbyblockwest.fest.proxylink.redis.pubsub.packet.BackendServerRegisterPacket;
 import com.blockbyblockwest.fest.proxylink.redis.pubsub.packet.BackendServerUnregisterPacket;
+import com.blockbyblockwest.fest.proxylink.redis.pubsub.packet.BackendServerUpdatePlayerCountPacket;
 import com.blockbyblockwest.fest.proxylink.redis.pubsub.packet.NetworkBroadcastPacket;
 import com.blockbyblockwest.fest.proxylink.redis.pubsub.packet.UserDisconnectPacket;
 import com.blockbyblockwest.fest.proxylink.redis.pubsub.packet.UserKickPacket;
@@ -61,6 +63,14 @@ public class NetworkPubSub extends GenericPacketPubSub {
     } else if (packet instanceof UserDisconnectPacket) {
 
       localNetworkState.getUserServerMap().remove(((UserDisconnectPacket) packet).getUniqueId());
+
+    } else if (packet instanceof BackendServerUpdatePlayerCountPacket) {
+
+      BackendServerUpdatePlayerCountPacket playerCount = (BackendServerUpdatePlayerCountPacket) packet;
+      RedisBackendServer serverInfo = localNetworkState.getServerInfo(playerCount.getServerId());
+      if (serverInfo != null) {
+        serverInfo.setPlayerCount(playerCount.getPlayerCount());
+      }
 
     }
   }

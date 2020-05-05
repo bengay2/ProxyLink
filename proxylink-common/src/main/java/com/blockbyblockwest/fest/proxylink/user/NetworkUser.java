@@ -53,7 +53,7 @@ public class NetworkUser {
   public Optional<BackendServer> getServer() throws ServiceException {
     Optional<String> server = networkService.getServerIdOfUser(uniqueId);
     if (server.isPresent()) {
-      networkService.getServerData(server.get());
+      networkService.getServer(server.get());
     }
     return Optional.empty();
   }

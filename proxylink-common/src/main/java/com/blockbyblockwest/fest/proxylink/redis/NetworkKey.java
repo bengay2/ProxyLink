@@ -21,16 +21,17 @@ public class NetworkKey {
   public static final String PING_DATA_HOVER = createKey("ping-data-hover");
   public static final String SERVER_REGISTER = createKey("server-register");
   public static final String SERVER_UNREGISTER = createKey("server-unregister");
+  public static final String SERVER_UPDATE_PLAYER_COUNT = createKey("server-update-player-count");
 
   public static final String PROXY_PLAYERS_NAMESPACE = createKey("online-player:");
   public static final String USER_SERVER_NAMESPACE = createKey("user-server:");
 
-  public static final String SERVER_INFO = createKey("server-info");
-  public static final String SERVER_INFO_TYPE = createKey("server-info-type");
-  public static final String SERVER_INFO_HOST = createKey("server-info-host");
-  public static final String SERVER_INFO_PORT = createKey("server-info-port");
-  public static final String SERVER_INFO_MAXPLAYERCOUNT = createKey("server-info-maxplayercount");
-  public static final String SERVER_INFO_EXTRADATA = createKey("server-info-extradata");
+  public static final String SERVER_NAMESPACE = createKey("server:");
+  public static final String SERVER_TYPE = "type";
+  public static final String SERVER_HOST = "host";
+  public static final String SERVER_PORT = "port";
+  public static final String SERVER_MAX_PLAYER_COUNT = "max-player-count";
+  public static final String SERVER_PLAYER_COUNT = "player-count";
 
   public static final String USER_SWITCH_SERVER_REQUEST = createKey("user-switch-server-request");
   public static final String USER_SWITCH_SERVER = createKey("user-switch-server");
@@ -45,6 +46,10 @@ public class NetworkKey {
 
   public static String getProxyPlayers(String proxyId) {
     return PROXY_PLAYERS_NAMESPACE + proxyId;
+  }
+
+  public static String getServerKey(String serverId) {
+    return SERVER_NAMESPACE + serverId;
   }
 
   public static String getUserServer(UUID userId) {

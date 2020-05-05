@@ -91,7 +91,14 @@ public class ProxyLinkVelocity {
 
   @Subscribe
   public void onShutdown(ProxyShutdownEvent e) {
-    networkService.shutdown();
+    if (networkService != null) {
+      try {
+        networkService.removeProxy(serverId);
+      } catch (ServiceException serviceException) {
+        serviceException.printStackTrace();
+      }
+      networkService.shutdown();
+    }
     redisBackend.shutdown();
   }
 

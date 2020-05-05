@@ -54,12 +54,12 @@ public class ProxyLinkBukkit extends JavaPlugin {
           @Override
           public void run() {
             try {
-              networkService.serverHeartBeat(serverId);
+              networkService.serverHeartBeat(serverId, Bukkit.getOnlinePlayers().size());
             } catch (ServiceException e) {
               e.printStackTrace();
             }
           }
-        }.runTaskTimerAsynchronously(this, 0, 20 * 20);
+        }.runTaskTimerAsynchronously(this, 0, 2 * 20);
 
       } catch (IllegalArgumentException | UnknownHostException ex) {
         throw new ServiceException("Invalid config");
@@ -75,7 +75,13 @@ public class ProxyLinkBukkit extends JavaPlugin {
     if (heartbeatTask != null) {
       heartbeatTask.cancel();
     }
+
     if (networkService != null) {
+      try {
+        networkService.removeServer(serverId);
+      } catch (ServiceException e) {
+        e.printStackTrace();
+      }
       networkService.shutdown();
     }
     redisBackend.shutdown();
