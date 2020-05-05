@@ -3,7 +3,7 @@ package com.blockbyblockwest.fest.proxylink.event.user;
 import com.blockbyblockwest.fest.proxylink.user.MessageType;
 import java.util.UUID;
 
-public class UserMessageEvent {
+public final class UserMessageEvent {
 
   private final UUID uniqueId;
   private final String message;

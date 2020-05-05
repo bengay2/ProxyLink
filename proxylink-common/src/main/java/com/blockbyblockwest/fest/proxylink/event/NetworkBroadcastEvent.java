@@ -1,6 +1,6 @@
 package com.blockbyblockwest.fest.proxylink.event;
 
-public class NetworkBroadcastEvent {
+public final class NetworkBroadcastEvent {
 
   private final String message;
   private final String permission;
@@ -16,6 +16,14 @@ public class NetworkBroadcastEvent {
 
   public String getPermission() {
     return permission;
+  }
+
+  @Override
+  public String toString() {
+    return "NetworkBroadcastEvent{" +
+        "message='" + message + '\'' +
+        ", permission='" + permission + '\'' +
+        '}';
   }
 
 }

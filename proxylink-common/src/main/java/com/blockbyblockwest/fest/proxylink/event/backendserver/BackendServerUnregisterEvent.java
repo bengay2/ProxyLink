@@ -1,6 +1,6 @@
 package com.blockbyblockwest.fest.proxylink.event.backendserver;
 
-public class BackendServerUnregisterEvent {
+public final class BackendServerUnregisterEvent {
 
   private final String serverId;
 

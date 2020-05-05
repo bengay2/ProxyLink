@@ -40,7 +40,7 @@ public class NetworkPubSub extends GenericPacketPubSub {
   @Override
   public void processPacket(PubSubPacket packet) {
     updateLocalNetworkState(packet);
-    eventExecutor.postEvent(packet);
+    eventExecutor.postEvent(packet.toEvent());
   }
 
   private void updateLocalNetworkState(PubSubPacket packet) {

@@ -5,6 +5,7 @@ import com.blockbyblockwest.fest.proxylink.event.VelocityEventExecutor;
 import com.blockbyblockwest.fest.proxylink.exception.ServiceException;
 import com.blockbyblockwest.fest.proxylink.listener.ProfileUpdateListener;
 import com.blockbyblockwest.fest.proxylink.listener.ProxyLinkListener;
+import com.blockbyblockwest.fest.proxylink.listener.RemoteEventListener;
 import com.blockbyblockwest.fest.proxylink.models.BackendServer;
 import com.blockbyblockwest.fest.proxylink.profile.ProfileService;
 import com.blockbyblockwest.fest.proxylink.redis.Credentials;
@@ -81,6 +82,7 @@ public class ProxyLinkVelocity {
           new VelocityEventExecutor(proxy.getEventManager()));
       profileService = new RedisProfileService(redisBackend.getJedisPool());
 
+      networkService.initialize();
       networkService.removeProxy(serverId);
       networkService.proxyHeartBeat(serverId);
 
@@ -94,6 +96,7 @@ public class ProxyLinkVelocity {
     }
 
     proxy.getEventManager().register(this, new ProxyLinkListener(this, networkService));
+    proxy.getEventManager().register(this, new RemoteEventListener(this));
     proxy.getEventManager().register(this, new ProfileUpdateListener(profileService));
 
   }

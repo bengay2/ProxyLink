@@ -32,6 +32,8 @@ public class ProxyLinkBukkit extends JavaPlugin {
   public void onEnable() {
     instance = this;
 
+    saveDefaultConfig();
+
     try {
       redisBackend.initialize(new Credentials(getConfig().getString("redis.host"),
           getConfig().getString("redis.password"), getConfig().getInt("redis.database"),

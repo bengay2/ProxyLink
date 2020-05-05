@@ -2,7 +2,7 @@ package com.blockbyblockwest.fest.proxylink.event.backendserver;
 
 import com.blockbyblockwest.fest.proxylink.models.BackendServer;
 
-public class BackendServerRegisterEvent {
+public final class BackendServerRegisterEvent {
 
   private final BackendServer backendServer;
 

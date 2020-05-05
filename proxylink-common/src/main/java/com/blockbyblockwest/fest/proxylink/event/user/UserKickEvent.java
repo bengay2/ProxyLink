@@ -2,7 +2,7 @@ package com.blockbyblockwest.fest.proxylink.event.user;
 
 import java.util.UUID;
 
-public class UserKickEvent {
+public final class UserKickEvent {
 
   private final UUID uniqueId;
   private final String reason;

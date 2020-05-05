@@ -1,6 +1,6 @@
 package com.blockbyblockwest.fest.proxylink.event.backendserver;
 
-public class BackendServerUpdatePlayerCountEvent {
+public final class BackendServerUpdatePlayerCountEvent {
 
   private final String serverId;
   private final int playerCount;

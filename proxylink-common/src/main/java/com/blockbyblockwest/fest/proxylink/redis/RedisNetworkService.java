@@ -303,7 +303,7 @@ public class RedisNetworkService implements NetworkService {
 
     try (Jedis jedis = jedisPool.getResource()) {
       Transaction multi = jedis.multi();
-      String primKey = NetworkKey.SERVER_NAMESPACE + ":" + id;
+      String primKey = NetworkKey.getServerKey(id);
 
       multi.hset(primKey, NetworkKey.SERVER_TYPE, serverType.toString());
       multi.hset(primKey, NetworkKey.SERVER_HOST, host);

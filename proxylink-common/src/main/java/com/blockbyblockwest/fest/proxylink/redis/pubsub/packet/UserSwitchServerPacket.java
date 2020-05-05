@@ -22,7 +22,7 @@ public class UserSwitchServerPacket extends PubSubPacket {
   public void read(String msg) {
     String[] split = ESCAPING_COLON.split(msg);
     uniqueId = UUID.fromString(split[0]);
-    toServer = split[2];
+    toServer = split[1];
   }
 
   @Override

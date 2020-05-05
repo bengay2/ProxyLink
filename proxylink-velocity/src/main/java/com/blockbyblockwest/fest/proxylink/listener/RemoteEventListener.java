@@ -1,0 +1,89 @@
+package com.blockbyblockwest.fest.proxylink.listener;
+
+import com.blockbyblockwest.fest.proxylink.ProxyLinkVelocity;
+import com.blockbyblockwest.fest.proxylink.event.NetworkBroadcastEvent;
+import com.blockbyblockwest.fest.proxylink.event.backendserver.BackendServerRegisterEvent;
+import com.blockbyblockwest.fest.proxylink.event.backendserver.BackendServerUnregisterEvent;
+import com.blockbyblockwest.fest.proxylink.event.user.UserKickEvent;
+import com.blockbyblockwest.fest.proxylink.event.user.UserMessageEvent;
+import com.blockbyblockwest.fest.proxylink.event.user.UserSwitchServerRequestEvent;
+import com.blockbyblockwest.fest.proxylink.models.BackendServer;
+import com.blockbyblockwest.fest.proxylink.user.MessageType;
+import com.velocitypowered.api.event.Subscribe;
+import com.velocitypowered.api.proxy.Player;
+import com.velocitypowered.api.proxy.server.RegisteredServer;
+import com.velocitypowered.api.proxy.server.ServerInfo;
+import java.net.InetSocketAddress;
+import java.util.Optional;
+import net.kyori.text.serializer.gson.GsonComponentSerializer;
+import net.kyori.text.serializer.legacy.LegacyComponentSerializer;
+
+public class RemoteEventListener {
+
+  private final ProxyLinkVelocity plugin;
+
+  public RemoteEventListener(ProxyLinkVelocity plugin) {
+    this.plugin = plugin;
+  }
+
+  @Subscribe
+  public void onServerRegister(BackendServerRegisterEvent e) {
+    toVelocityServer(e.getBackendServer())
+        .ifPresent(found -> plugin.getProxy().unregisterServer(found.getServerInfo()));
+
+    plugin.getLogger().info("Registering Server");
+    plugin.getProxy().registerServer(new ServerInfo(e.getBackendServer().getId(),
+        new InetSocketAddress(e.getBackendServer().getHost(), e.getBackendServer().getPort())));
+  }
+
+  @Subscribe
+  public void onServerUnregister(BackendServerUnregisterEvent e) {
+    System.out.println("unregister");
+    plugin.getProxy().getServer(e.getServerId())
+        .ifPresent(found -> plugin.getProxy().unregisterServer(found.getServerInfo()));
+
+  }
+
+  @Subscribe
+  public void onSwitchRequest(UserSwitchServerRequestEvent e) {
+    plugin.getProxy().getServer(e.getToServer())
+        .ifPresent(server -> plugin.getProxy().getPlayer(e.getUniqueId())
+            .ifPresent(player -> player.createConnectionRequest(server).fireAndForget()));
+
+  }
+
+  private Optional<RegisteredServer> toVelocityServer(BackendServer backendServer) {
+    return plugin.getProxy().getServer(backendServer.getId());
+  }
+
+  @Subscribe
+  public void onUserMessage(UserMessageEvent e) {
+    if (e.getType() == MessageType.COMPONENT) {
+      plugin.getProxy().getPlayer(e.getUniqueId())
+          .ifPresent(player -> player
+              .sendMessage(GsonComponentSerializer.INSTANCE.deserialize(e.getMessage())));
+    } else if (e.getType() == MessageType.STRING) {
+      plugin.getProxy().getPlayer(e.getUniqueId())
+          .ifPresent(player -> player
+              .sendMessage(LegacyComponentSerializer.legacy().deserialize(e.getMessage())));
+    }
+  }
+
+  @Subscribe
+  public void onUserKick(UserKickEvent e) {
+    plugin.getProxy().getPlayer(e.getUniqueId())
+        .ifPresent(player -> player
+            .disconnect(LegacyComponentSerializer.legacy().deserialize(e.getReason())));
+
+  }
+
+  @Subscribe
+  public void onBroadcast(NetworkBroadcastEvent e) {
+    for (Player player : plugin.getProxy().getAllPlayers()) {
+      if (e.getPermission().isEmpty() || player.hasPermission(e.getPermission())) {
+        player.sendMessage(LegacyComponentSerializer.legacy().deserialize(e.getMessage()));
+      }
+    }
+  }
+
+}

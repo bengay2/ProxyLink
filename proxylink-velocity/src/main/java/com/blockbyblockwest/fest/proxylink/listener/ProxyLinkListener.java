@@ -2,6 +2,7 @@ package com.blockbyblockwest.fest.proxylink.listener;
 
 import com.blockbyblockwest.fest.proxylink.NetworkService;
 import com.blockbyblockwest.fest.proxylink.ProxyLinkVelocity;
+import com.blockbyblockwest.fest.proxylink.ServerType;
 import com.blockbyblockwest.fest.proxylink.event.NetworkBroadcastEvent;
 import com.blockbyblockwest.fest.proxylink.event.backendserver.BackendServerRegisterEvent;
 import com.blockbyblockwest.fest.proxylink.event.backendserver.BackendServerUnregisterEvent;
@@ -18,6 +19,7 @@ import com.velocitypowered.api.event.ResultedEvent.ComponentResult;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.event.connection.LoginEvent;
+import com.velocitypowered.api.event.player.PlayerChooseInitialServerEvent;
 import com.velocitypowered.api.event.player.ServerConnectedEvent;
 import com.velocitypowered.api.event.proxy.ProxyPingEvent;
 import com.velocitypowered.api.proxy.Player;
@@ -30,6 +32,7 @@ import java.net.InetSocketAddress;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -134,7 +137,25 @@ public class ProxyLinkListener {
   }
 
   @Subscribe
-  public void on(ProxyPingEvent e) {
+  public void onChooseFirstServer(PlayerChooseInitialServerEvent e) {
+    try {
+      networkService.getServers().stream()
+          .filter(server -> server.getServerType() == ServerType.HUB)
+          .min(Comparator.comparingInt(BackendServer::getPlayerCount))
+          .flatMap(this::toVelocityServer)
+          .ifPresent(e::setInitialServer);
+    } catch (ServiceException ex) {
+      ex.printStackTrace();
+      e.getPlayer().disconnect(TextComponent.of("An error occurred", TextColor.RED));
+    }
+  }
+
+  private Optional<RegisteredServer> toVelocityServer(BackendServer backendServer) {
+    return plugin.getProxy().getServer(backendServer.getId());
+  }
+
+  @Subscribe
+  public void onPing(ProxyPingEvent e) {
     try {
       e.setPing(pingCache.getServerPing(e.getPing()));
     } catch (ServiceException ex) {
@@ -182,66 +203,6 @@ public class ProxyLinkListener {
           .onlinePlayers(cachedOnline)
           .version(new Version(original.getVersion().getProtocol(), "BXBW 1.8-1.15"))
           .build();
-    }
-  }
-
-  // Processing remote events from here
-
-  @Subscribe
-  public void onServerRegister(BackendServerRegisterEvent e) {
-    toVelocityServer(e.getBackendServer())
-        .ifPresent(found -> plugin.getProxy().unregisterServer(found.getServerInfo()));
-
-    plugin.getProxy().registerServer(new ServerInfo(e.getBackendServer().getId(),
-        new InetSocketAddress(e.getBackendServer().getHost(), e.getBackendServer().getPort())));
-  }
-
-  @Subscribe
-  public void onServerUnregister(BackendServerUnregisterEvent e) {
-    plugin.getProxy().getServer(e.getServerId())
-        .ifPresent(found -> plugin.getProxy().unregisterServer(found.getServerInfo()));
-
-  }
-
-  @Subscribe
-  public void onSwitchRequest(UserSwitchServerRequestEvent e) {
-    plugin.getProxy().getServer(e.getToServer())
-        .ifPresent(server -> plugin.getProxy().getPlayer(e.getUniqueId())
-            .ifPresent(player -> player.createConnectionRequest(server).fireAndForget()));
-
-  }
-
-  private Optional<RegisteredServer> toVelocityServer(BackendServer backendServer) {
-    return plugin.getProxy().getServer(backendServer.getId());
-  }
-
-  @Subscribe
-  public void onUserMessage(UserMessageEvent e) {
-    if (e.getType() == MessageType.COMPONENT) {
-      plugin.getProxy().getPlayer(e.getUniqueId())
-          .ifPresent(player -> player
-              .sendMessage(GsonComponentSerializer.INSTANCE.deserialize(e.getMessage())));
-    } else if (e.getType() == MessageType.STRING) {
-      plugin.getProxy().getPlayer(e.getUniqueId())
-          .ifPresent(player -> player
-              .sendMessage(LegacyComponentSerializer.legacy().deserialize(e.getMessage())));
-    }
-  }
-
-  @Subscribe
-  public void onUserKick(UserKickEvent e) {
-    plugin.getProxy().getPlayer(e.getUniqueId())
-        .ifPresent(player -> player
-            .disconnect(LegacyComponentSerializer.legacy().deserialize(e.getReason())));
-
-  }
-
-  @Subscribe
-  public void onBroadcast(NetworkBroadcastEvent e) {
-    for (Player player : plugin.getProxy().getAllPlayers()) {
-      if (e.getPermission().isEmpty() || player.hasPermission(e.getPermission())) {
-        player.sendMessage(LegacyComponentSerializer.legacy().deserialize(e.getMessage()));
-      }
     }
   }
 
