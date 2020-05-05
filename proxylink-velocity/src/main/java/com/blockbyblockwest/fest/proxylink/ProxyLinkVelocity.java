@@ -21,10 +21,12 @@ import com.velocitypowered.api.plugin.Plugin;
 import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
+import com.velocitypowered.api.scheduler.ScheduledTask;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.file.Path;
+import java.util.concurrent.TimeUnit;
 import ninja.leaping.configurate.ConfigurationNode;
 import org.slf4j.Logger;
 
@@ -45,6 +47,7 @@ public class ProxyLinkVelocity {
   private final Logger logger;
 
   private String serverId;
+  private ScheduledTask heartbeastTask;
 
   private NetworkService networkService;
   private ProfileService profileService;
@@ -91,6 +94,10 @@ public class ProxyLinkVelocity {
             new InetSocketAddress(server.getHost(), server.getPort())));
       }
 
+      heartbeastTask = proxy.getScheduler()
+          .buildTask(this, this::executeHeartBeat)
+          .repeat(30, TimeUnit.SECONDS).schedule();
+
     } catch (ServiceException e) {
       e.printStackTrace();
     }
@@ -103,6 +110,9 @@ public class ProxyLinkVelocity {
 
   @Subscribe
   public void onShutdown(ProxyShutdownEvent e) {
+    if (heartbeastTask != null) {
+      heartbeastTask.cancel();
+    }
     if (networkService != null) {
       try {
         networkService.removeProxy(serverId);
@@ -112,6 +122,15 @@ public class ProxyLinkVelocity {
       networkService.shutdown();
     }
     redisBackend.shutdown();
+  }
+
+
+  private void executeHeartBeat() {
+    try {
+      networkService.proxyHeartBeat(serverId);
+    } catch (ServiceException e) {
+      e.printStackTrace();
+    }
   }
 
   public NetworkService getNetworkService() {
