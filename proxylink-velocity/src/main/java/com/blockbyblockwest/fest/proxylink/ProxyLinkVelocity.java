@@ -5,6 +5,7 @@ import com.blockbyblockwest.fest.proxylink.event.VelocityEventExecutor;
 import com.blockbyblockwest.fest.proxylink.exception.ServiceException;
 import com.blockbyblockwest.fest.proxylink.listener.ProfileUpdateListener;
 import com.blockbyblockwest.fest.proxylink.listener.ProxyLinkListener;
+import com.blockbyblockwest.fest.proxylink.models.BackendServer;
 import com.blockbyblockwest.fest.proxylink.profile.ProfileService;
 import com.blockbyblockwest.fest.proxylink.redis.Credentials;
 import com.blockbyblockwest.fest.proxylink.redis.RedisBackend;
@@ -18,8 +19,10 @@ import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
 import com.velocitypowered.api.plugin.Plugin;
 import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.ProxyServer;
+import com.velocitypowered.api.proxy.server.ServerInfo;
 import java.io.File;
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.nio.file.Path;
 import ninja.leaping.configurate.ConfigurationNode;
 import org.slf4j.Logger;
@@ -67,7 +70,7 @@ public class ProxyLinkVelocity {
       e.printStackTrace();
     }
 
-    this.serverId = config.getNode("serverid").getString();
+    this.serverId = config.getNode("proxyid").getString();
     try {
       ConfigurationNode redisNode = config.getNode("redis");
       redisBackend.initialize(new Credentials(redisNode.getNode("host").getString(),
@@ -80,6 +83,12 @@ public class ProxyLinkVelocity {
 
       networkService.removeProxy(serverId);
       networkService.proxyHeartBeat(serverId);
+
+      for (BackendServer server : networkService.getServers()) {
+        proxy.registerServer(new ServerInfo(server.getId(),
+            new InetSocketAddress(server.getHost(), server.getPort())));
+      }
+
     } catch (ServiceException e) {
       e.printStackTrace();
     }
