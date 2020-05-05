@@ -2,8 +2,8 @@ package com.blockbyblockwest.fest.proxylink;
 
 import com.blockbyblockwest.fest.proxylink.exception.ServiceException;
 import com.blockbyblockwest.fest.proxylink.models.BackendServer;
+import com.blockbyblockwest.fest.proxylink.models.LinkedProxyServer;
 import com.blockbyblockwest.fest.proxylink.models.NetworkPingData;
-import com.blockbyblockwest.fest.proxylink.models.ProxyServer;
 import com.blockbyblockwest.fest.proxylink.user.MessageType;
 import com.blockbyblockwest.fest.proxylink.user.NetworkUser;
 import java.util.Collection;
@@ -30,7 +30,7 @@ public interface NetworkService {
    * @return set of all proxies in the network
    * @throws ServiceException if a connection to the backend fails
    */
-  Set<ProxyServer> getProxyServers() throws ServiceException;
+  Set<LinkedProxyServer> getProxyServers() throws ServiceException;
 
   /**
    * The maximum amount of players that can theoretically connect to the server filling all
@@ -40,7 +40,7 @@ public interface NetworkService {
    * @throws ServiceException if a connection to the backend fails
    */
   default int getMaxPlayerCount() throws ServiceException {
-    return getProxyServers().stream().mapToInt(ProxyServer::getMaxPlayerCount).sum();
+    return getProxyServers().stream().mapToInt(LinkedProxyServer::getMaxPlayerCount).sum();
   }
 
   /**
@@ -100,6 +100,14 @@ public interface NetworkService {
   void proxyHeartBeat(String id) throws ServiceException;
 
   /**
+   * Called by a proxy when they disconnect from the network.
+   *
+   * @param id of the proxy
+   * @throws ServiceException if a connection to the backend fails
+   */
+  void removeProxy(String id) throws ServiceException;
+
+  /**
    * This method is called periodically by all servers participating in this network.
    *
    * @param id identifier of the server
@@ -108,10 +116,10 @@ public interface NetworkService {
   void serverHeartBeat(String id) throws ServiceException;
 
   /**
-   * Called by {@link com.blockbyblockwest.fest.proxylink.models.Server} when they disconnect from
-   * the network.
+   * Called by a backend when they disconnect from the network.
    *
-   * @param id of proxy or server
+   * @param id of  server
+   * @throws ServiceException if a connection to the backend fails
    */
   void removeServer(String id) throws ServiceException;
 
@@ -124,8 +132,8 @@ public interface NetworkService {
    * @param port port of the server
    * @throws ServiceException on failure
    */
-  BackendServer registerServer(String id, ServerType serverType, String host, int port)
-      throws ServiceException;
+  BackendServer registerServer(String id, ServerType serverType, String host, int port,
+      int maxPlayerCount) throws ServiceException;
 
   // User related methods
 
@@ -154,7 +162,7 @@ public interface NetworkService {
   /**
    * Called by the proxy on server switch
    */
-  void setServer(UUID uniqueId, String toServerId) throws ServiceException;
+  void switchServer(UUID uniqueId, String toServerId) throws ServiceException;
 
   /**
    * {@link NetworkService#sendUserToServer(UUID, String)}

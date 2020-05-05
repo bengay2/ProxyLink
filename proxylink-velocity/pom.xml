@@ -25,6 +25,45 @@
       <version>4.11</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <artifactId>velocity-api</artifactId>
+      <groupId>com.velocitypowered</groupId>
+      <scope>provided</scope>
+      <version>1.1.0-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <artifactId>configurate-hocon</artifactId>
+      <groupId>org.spongepowered</groupId>
+      <version>3.6</version>
+    </dependency>
+    <dependency>
+      <groupId>com.blockbyblockwest.fest</groupId>
+      <artifactId>proxylink-common</artifactId>
+      <version>1.0-SNAPSHOT</version>
+    </dependency>
   </dependencies>
 
+  <repositories>
+    <repository>
+      <id>velocity</id>
+      <url>https://repo.velocitypowered.com/snapshots/</url>
+    </repository>
+    <repository>
+      <id>sponge</id>
+      <url>https://repo.spongepowered.org/maven</url>
+    </repository>
+  </repositories>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>8</source>
+          <target>8</target>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 </project>

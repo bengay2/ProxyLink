@@ -12,10 +12,10 @@ public interface BackendServer extends Server {
 
   int getPlayerCount();
 
-  int getMaxPlayers();
+  int getMaxPlayerCount();
 
   default boolean isFull() {
-    return getPlayerCount() >= getMaxPlayers();
+    return getPlayerCount() >= getMaxPlayerCount();
   }
 
 }

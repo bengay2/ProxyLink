@@ -1,0 +1,4 @@
+name: BXBW-ProxyLink
+author: Gabik21
+version: "1.0"
+main: com.blockbyblockwest.fest.proxylink.ProxyLinkBukkit
