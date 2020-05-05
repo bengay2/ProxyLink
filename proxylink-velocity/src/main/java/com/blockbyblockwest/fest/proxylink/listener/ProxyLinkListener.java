@@ -2,6 +2,7 @@ package com.blockbyblockwest.fest.proxylink.listener;
 
 import com.blockbyblockwest.fest.proxylink.NetworkService;
 import com.blockbyblockwest.fest.proxylink.ProxyLinkVelocity;
+import com.blockbyblockwest.fest.proxylink.event.NetworkBroadcastEvent;
 import com.blockbyblockwest.fest.proxylink.event.backendserver.BackendServerRegisterEvent;
 import com.blockbyblockwest.fest.proxylink.event.backendserver.BackendServerUnregisterEvent;
 import com.blockbyblockwest.fest.proxylink.event.user.UserKickEvent;
@@ -19,6 +20,7 @@ import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.event.connection.LoginEvent;
 import com.velocitypowered.api.event.player.ServerConnectedEvent;
 import com.velocitypowered.api.event.proxy.ProxyPingEvent;
+import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
 import com.velocitypowered.api.proxy.server.ServerPing;
@@ -232,6 +234,15 @@ public class ProxyLinkListener {
         .ifPresent(player -> player
             .disconnect(LegacyComponentSerializer.legacy().deserialize(e.getReason())));
 
+  }
+
+  @Subscribe
+  public void onBroadcast(NetworkBroadcastEvent e) {
+    for (Player player : plugin.getProxy().getAllPlayers()) {
+      if (e.getPermission().isEmpty() || player.hasPermission(e.getPermission())) {
+        player.sendMessage(LegacyComponentSerializer.legacy().deserialize(e.getMessage()));
+      }
+    }
   }
 
 }
