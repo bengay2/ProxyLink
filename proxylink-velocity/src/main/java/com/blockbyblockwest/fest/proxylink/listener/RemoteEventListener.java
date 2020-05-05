@@ -31,14 +31,14 @@ public class RemoteEventListener {
     toVelocityServer(e.getBackendServer())
         .ifPresent(found -> plugin.getProxy().unregisterServer(found.getServerInfo()));
 
-    plugin.getLogger().info("Registering Server");
+    plugin.getLogger().info("Registering {}", e.getBackendServer());
     plugin.getProxy().registerServer(new ServerInfo(e.getBackendServer().getId(),
         new InetSocketAddress(e.getBackendServer().getHost(), e.getBackendServer().getPort())));
   }
 
   @Subscribe
   public void onServerUnregister(BackendServerUnregisterEvent e) {
-    System.out.println("unregister");
+    plugin.getLogger().info("Unregistering {}", e.getServerId());
     plugin.getProxy().getServer(e.getServerId())
         .ifPresent(found -> plugin.getProxy().unregisterServer(found.getServerInfo()));
 
@@ -46,6 +46,8 @@ public class RemoteEventListener {
 
   @Subscribe
   public void onSwitchRequest(UserSwitchServerRequestEvent e) {
+    plugin.getLogger()
+        .info("Switch Request of user {} to server {}", e.getUniqueId(), e.getToServer());
     plugin.getProxy().getServer(e.getToServer())
         .ifPresent(server -> plugin.getProxy().getPlayer(e.getUniqueId())
             .ifPresent(player -> player.createConnectionRequest(server).fireAndForget()));
@@ -58,6 +60,7 @@ public class RemoteEventListener {
 
   @Subscribe
   public void onUserMessage(UserMessageEvent e) {
+    plugin.getLogger().info("Message for {} containing {}", e.getUniqueId(), e.getMessage());
     if (e.getType() == MessageType.COMPONENT) {
       plugin.getProxy().getPlayer(e.getUniqueId())
           .ifPresent(player -> player
@@ -71,6 +74,7 @@ public class RemoteEventListener {
 
   @Subscribe
   public void onUserKick(UserKickEvent e) {
+    plugin.getLogger().info("Kick user {} for reason {}", e.getUniqueId(), e.getReason());
     plugin.getProxy().getPlayer(e.getUniqueId())
         .ifPresent(player -> player
             .disconnect(LegacyComponentSerializer.legacy().deserialize(e.getReason())));

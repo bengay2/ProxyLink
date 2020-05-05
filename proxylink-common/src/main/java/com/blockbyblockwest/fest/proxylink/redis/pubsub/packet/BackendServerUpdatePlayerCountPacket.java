@@ -9,6 +9,9 @@ public class BackendServerUpdatePlayerCountPacket extends PubSubPacket {
   private String serverId;
   private int playerCount;
 
+  public BackendServerUpdatePlayerCountPacket() {
+  }
+
   public BackendServerUpdatePlayerCountPacket(String serverId, int playerCount) {
     this.serverId = serverId;
     this.playerCount = playerCount;

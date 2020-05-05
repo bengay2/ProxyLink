@@ -26,6 +26,7 @@ public class NetworkPubSub extends GenericPacketPubSub {
 
     registerPacket(NetworkKey.SERVER_REGISTER, BackendServerRegisterPacket::new);
     registerPacket(NetworkKey.SERVER_UNREGISTER, BackendServerUnregisterPacket::new);
+    registerPacket(NetworkKey.SERVER_UPDATE_PLAYER_COUNT, BackendServerUpdatePlayerCountPacket::new);
 
     registerPacket(NetworkKey.NETWORK_BROADCAST, NetworkBroadcastPacket::new);
 

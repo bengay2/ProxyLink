@@ -44,7 +44,6 @@ public class ProxyLinkVelocity {
   private final Path directory;
   private final Logger logger;
 
-  private Config config;
   private String serverId;
 
   private NetworkService networkService;
@@ -64,9 +63,9 @@ public class ProxyLinkVelocity {
     instance = this;
 
     File configFile = new File(directory.toFile(), "config.conf");
-    this.config = new Config(configFile);
+    Config config = new Config(configFile);
     try {
-      this.config.load();
+      config.load();
     } catch (IOException e) {
       e.printStackTrace();
     }
@@ -83,6 +82,7 @@ public class ProxyLinkVelocity {
       profileService = new RedisProfileService(redisBackend.getJedisPool());
 
       networkService.initialize();
+      logger.info("Proxy ID: {}", serverId);
       networkService.removeProxy(serverId);
       networkService.proxyHeartBeat(serverId);
 
