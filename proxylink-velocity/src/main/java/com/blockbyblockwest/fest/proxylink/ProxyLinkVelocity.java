@@ -79,7 +79,7 @@ public class ProxyLinkVelocity {
       ConfigurationNode redisNode = config.getNode("redis");
       redisBackend.initialize(new Credentials(redisNode.getNode("host").getString(),
           redisNode.getNode("password").getString(), redisNode.getNode("database").getInt(),
-          redisNode.getNode("port").getInt()));
+          redisNode.getNode("port").getInt(), redisNode.getNode("ssl").getBoolean()));
 
       networkService = new RedisNetworkService(redisBackend.getJedisPool(),
           new VelocityEventExecutor(proxy.getEventManager()));

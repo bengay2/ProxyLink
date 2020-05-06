@@ -38,7 +38,7 @@ public class ProxyLinkBukkit extends JavaPlugin {
     try {
       redisBackend.initialize(new Credentials(getConfig().getString("redis.host"),
           getConfig().getString("redis.password"), getConfig().getInt("redis.database"),
-          getConfig().getInt("redis.port")));
+          getConfig().getInt("redis.port"), getConfig().getBoolean("redis.ssl")));
 
       networkService = new RedisNetworkService(redisBackend.getJedisPool(),
           new BukkitEventExecutor(getServer().getPluginManager()));
