@@ -23,10 +23,11 @@ public class RedisBackend {
       poolConfig.setBlockWhenExhausted(true);
 
       if (cred.getPassword() == null || cred.getPassword().isEmpty()) {
-        jedisPool = new JedisPool(poolConfig, cred.getHost(), cred.getPort(), 2000);
+        jedisPool = new JedisPool(poolConfig, cred.getHost(), cred.getPort(), 2000, null,
+            cred.getDatabase(), true);
       } else {
         jedisPool = new JedisPool(poolConfig, cred.getHost(), cred.getPort(), 2000,
-            cred.getPassword(), cred.getDatabase());
+            cred.getPassword(), cred.getDatabase(), true);
       }
 
       // Simple test if a connection can be established
