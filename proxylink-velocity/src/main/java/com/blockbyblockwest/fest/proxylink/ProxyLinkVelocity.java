@@ -7,6 +7,7 @@ import com.blockbyblockwest.fest.proxylink.listener.ProfileUpdateListener;
 import com.blockbyblockwest.fest.proxylink.listener.ProxyLinkListener;
 import com.blockbyblockwest.fest.proxylink.listener.RemoteEventListener;
 import com.blockbyblockwest.fest.proxylink.models.BackendServer;
+import com.blockbyblockwest.fest.proxylink.models.LinkedProxyServer;
 import com.blockbyblockwest.fest.proxylink.profile.ProfileService;
 import com.blockbyblockwest.fest.proxylink.redis.Credentials;
 import com.blockbyblockwest.fest.proxylink.redis.RedisBackend;
@@ -86,6 +87,12 @@ public class ProxyLinkVelocity {
 
       networkService.initialize();
       logger.info("Proxy ID: {}", serverId);
+      for (LinkedProxyServer proxyServer : networkService.getProxyServers()) {
+        if (proxyServer.getId().equals(serverId)) {
+          throw new ServiceException("Proxy already running with that id");
+        }
+      }
+
       networkService.removeProxy(serverId);
       networkService.proxyHeartBeat(serverId);
 
