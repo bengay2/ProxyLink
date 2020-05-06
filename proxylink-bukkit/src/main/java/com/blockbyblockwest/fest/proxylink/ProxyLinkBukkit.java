@@ -26,6 +26,7 @@ public class ProxyLinkBukkit extends JavaPlugin {
   private NetworkService networkService;
   private ProfileService profileService;
   private String serverId;
+  private ServerType serverType;
   private BukkitTask heartbeatTask;
 
   @Override
@@ -47,9 +48,8 @@ public class ProxyLinkBukkit extends JavaPlugin {
 
       serverId = getConfig().getString("serverid");
       try {
-
-        networkService.registerServer(serverId,
-            ServerType.valueOf(getConfig().getString("servertype")),
+        serverType = ServerType.valueOf(getConfig().getString("servertype"));
+        networkService.registerServer(serverId, serverType,
             InetAddress.getLocalHost().getHostAddress(), Bukkit.getPort(), Bukkit.getMaxPlayers());
 
         heartbeatTask = new BukkitRunnable() {
@@ -95,6 +95,10 @@ public class ProxyLinkBukkit extends JavaPlugin {
 
   public String getServerId() {
     return serverId;
+  }
+
+  public ServerType getServerType() {
+    return serverType;
   }
 
   public ProfileService getProfileService() {

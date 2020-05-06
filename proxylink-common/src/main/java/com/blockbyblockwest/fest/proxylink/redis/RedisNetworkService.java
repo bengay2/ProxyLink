@@ -353,6 +353,7 @@ public class RedisNetworkService implements NetworkService {
     try (Jedis jedis = jedisPool.getResource()) {
       Transaction multi = jedis.multi();
       multi.srem(NetworkKey.getProxyPlayers(proxyId), uniqueId.toString());
+      multi.del(NetworkKey.getUserServer(uniqueId));
       new UserDisconnectPacket(uniqueId).publish(multi);
       multi.exec();
     } catch (JedisException e) {
