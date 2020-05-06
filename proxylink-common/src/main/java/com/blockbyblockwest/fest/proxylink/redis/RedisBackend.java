@@ -24,10 +24,10 @@ public class RedisBackend {
 
       if (cred.getPassword() == null || cred.getPassword().isEmpty()) {
         jedisPool = new JedisPool(poolConfig, cred.getHost(), cred.getPort(), 2000, null,
-            cred.getDatabase(), true);
+            cred.getDatabase(), cred.isSsl());
       } else {
         jedisPool = new JedisPool(poolConfig, cred.getHost(), cred.getPort(), 2000,
-            cred.getPassword(), cred.getDatabase(), true);
+            cred.getPassword(), cred.getDatabase(), cred.isSsl());
       }
 
       // Simple test if a connection can be established
