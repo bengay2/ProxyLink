@@ -162,6 +162,8 @@ public class RedisNetworkService implements NetworkService {
 
     Collection<RedisBackendServer> result = responseMap.stream()
         .map(BackendServerResponse::toServer)
+        .filter(Optional::isPresent)
+        .map(Optional::get)
         .collect(Collectors.toList());
 
     for (RedisBackendServer server : result) {

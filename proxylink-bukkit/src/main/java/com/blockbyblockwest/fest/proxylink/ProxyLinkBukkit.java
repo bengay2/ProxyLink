@@ -9,10 +9,11 @@ import com.blockbyblockwest.fest.proxylink.redis.RedisNetworkService;
 import com.blockbyblockwest.fest.proxylink.redis.profile.RedisProfileService;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitRunnable;
-import org.bukkit.scheduler.BukkitTask;
 
 public class ProxyLinkBukkit extends JavaPlugin {
 
@@ -23,11 +24,13 @@ public class ProxyLinkBukkit extends JavaPlugin {
   }
 
   private final RedisBackend redisBackend = new RedisBackend();
+  private final ScheduledExecutorService heartbeatExecutor = Executors
+      .newSingleThreadScheduledExecutor();
+
   private NetworkService networkService;
   private ProfileService profileService;
   private String serverId;
   private ServerType serverType;
-  private BukkitTask heartbeatTask;
 
   @Override
   public void onEnable() {
@@ -52,17 +55,13 @@ public class ProxyLinkBukkit extends JavaPlugin {
         networkService.registerServer(serverId, serverType,
             InetAddress.getLocalHost().getHostAddress(), Bukkit.getPort(), Bukkit.getMaxPlayers());
 
-        heartbeatTask = new BukkitRunnable() {
-          @Override
-          public void run() {
-            try {
-              networkService.serverHeartBeat(serverId, Bukkit.getOnlinePlayers().size());
-            } catch (ServiceException e) {
-              e.printStackTrace();
-            }
+        heartbeatExecutor.scheduleAtFixedRate(() -> {
+          try {
+            networkService.serverHeartBeat(serverId, Bukkit.getOnlinePlayers().size());
+          } catch (ServiceException e) {
+            e.printStackTrace();
           }
-        }.runTaskTimerAsynchronously(this, 0, 2 * 20);
-
+        }, 0, 2, TimeUnit.SECONDS);
       } catch (IllegalArgumentException | UnknownHostException ex) {
         throw new ServiceException("Invalid config");
       }
@@ -74,8 +73,13 @@ public class ProxyLinkBukkit extends JavaPlugin {
 
   @Override
   public void onDisable() {
-    if (heartbeatTask != null) {
-      heartbeatTask.cancel();
+    heartbeatExecutor.shutdown();
+    try {
+      if (!heartbeatExecutor.awaitTermination(5, TimeUnit.SECONDS)) {
+        getLogger().severe("Timed out shutting down heartbeat thread");
+      }
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
     }
 
     if (networkService != null) {
