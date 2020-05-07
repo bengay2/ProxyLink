@@ -112,7 +112,7 @@ public class ProxyLinkVelocity {
 
       proxy.getScheduler()
           .buildTask(this, onlinePlayerNames::update)
-          .repeat(25, TimeUnit.SECONDS);
+          .repeat(10, TimeUnit.SECONDS);
 
     } catch (ServiceException e) {
       e.printStackTrace();
