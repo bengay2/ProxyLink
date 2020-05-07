@@ -50,4 +50,14 @@ public class RedisBackendServer extends RedisServer implements BackendServer {
     this.playerCount = playerCount;
   }
 
+  @Override
+  public String toString() {
+    return "RedisBackendServer{" +
+        "serverType=" + serverType +
+        ", host='" + host + '\'' +
+        ", port=" + port +
+        ", maxPlayerCount=" + maxPlayerCount +
+        ", playerCount=" + playerCount +
+        "} " + super.toString();
+  }
 }

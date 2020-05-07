@@ -15,4 +15,11 @@ public class RedisServer implements Server {
     return id;
   }
 
+  @Override
+  public String toString() {
+    return "RedisServer{" +
+        "id='" + id + '\'' +
+        '}';
+  }
+  
 }
