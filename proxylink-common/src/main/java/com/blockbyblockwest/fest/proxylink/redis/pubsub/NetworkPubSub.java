@@ -78,6 +78,7 @@ public class NetworkPubSub extends GenericPacketPubSub {
 
   @Override
   public void onConnectionLost() {
-    super.onConnectionLost();
+    localNetworkState.invalidate();
   }
+
 }

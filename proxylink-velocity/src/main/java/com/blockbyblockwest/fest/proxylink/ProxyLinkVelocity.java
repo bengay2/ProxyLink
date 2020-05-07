@@ -1,5 +1,6 @@
 package com.blockbyblockwest.fest.proxylink;
 
+import com.blockbyblockwest.fest.proxylink.command.SendCommand;
 import com.blockbyblockwest.fest.proxylink.config.Config;
 import com.blockbyblockwest.fest.proxylink.event.VelocityEventExecutor;
 import com.blockbyblockwest.fest.proxylink.exception.ServiceException;
@@ -53,6 +54,8 @@ public class ProxyLinkVelocity {
   private NetworkService networkService;
   private ProfileService profileService;
 
+  private OnlinePlayerNames onlinePlayerNames;
+
   @Inject
   public ProxyLinkVelocity(ProxyServer proxy, CommandManager commandManager,
       @DataDirectory Path directory, Logger logger) {
@@ -105,6 +108,12 @@ public class ProxyLinkVelocity {
           .buildTask(this, this::executeHeartBeat)
           .repeat(30, TimeUnit.SECONDS).schedule();
 
+      onlinePlayerNames = new OnlinePlayerNames(networkService, profileService);
+
+      proxy.getScheduler()
+          .buildTask(this, onlinePlayerNames::update)
+          .repeat(25, TimeUnit.SECONDS);
+
     } catch (ServiceException e) {
       e.printStackTrace();
     }
@@ -113,6 +122,7 @@ public class ProxyLinkVelocity {
     proxy.getEventManager().register(this, new RemoteEventListener(this));
     proxy.getEventManager().register(this, new ProfileUpdateListener(profileService));
 
+    commandManager.register("send", new SendCommand(this));
   }
 
   @Subscribe
@@ -158,6 +168,10 @@ public class ProxyLinkVelocity {
 
   public Logger getLogger() {
     return logger;
+  }
+
+  public OnlinePlayerNames getOnlinePlayerNames() {
+    return onlinePlayerNames;
   }
 
 }
