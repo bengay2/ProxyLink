@@ -3,7 +3,6 @@ package com.blockbyblockwest.fest.proxylink;
 import com.blockbyblockwest.fest.proxylink.exception.ServiceException;
 import com.blockbyblockwest.fest.proxylink.models.BackendServer;
 import com.blockbyblockwest.fest.proxylink.models.LinkedProxyServer;
-import com.blockbyblockwest.fest.proxylink.models.NetworkPingData;
 import com.blockbyblockwest.fest.proxylink.user.MessageType;
 import com.blockbyblockwest.fest.proxylink.user.NetworkUser;
 import java.util.Collection;
@@ -42,14 +41,6 @@ public interface NetworkService {
   default int getMaxPlayerCount() throws ServiceException {
     return getProxyServers().stream().mapToInt(LinkedProxyServer::getMaxPlayerCount).sum();
   }
-
-  /**
-   * Represents the data served when the network is pinged with a minecraft client.
-   *
-   * @return data to be forwarded to a client
-   * @throws ServiceException if a connection to the backend fails
-   */
-  NetworkPingData getPingData() throws ServiceException;
 
   /**
    * The set of all users connected to the network.<p> Represented in their unique identifiers.

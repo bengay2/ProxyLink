@@ -6,7 +6,6 @@ import com.blockbyblockwest.fest.proxylink.ServerType;
 import com.blockbyblockwest.fest.proxylink.exception.ServiceException;
 import com.blockbyblockwest.fest.proxylink.models.BackendServer;
 import com.blockbyblockwest.fest.proxylink.models.LinkedProxyServer;
-import com.blockbyblockwest.fest.proxylink.models.NetworkPingData;
 import com.velocitypowered.api.event.PostOrder;
 import com.velocitypowered.api.event.ResultedEvent.ComponentResult;
 import com.velocitypowered.api.event.Subscribe;
@@ -14,13 +13,7 @@ import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.event.connection.LoginEvent;
 import com.velocitypowered.api.event.player.PlayerChooseInitialServerEvent;
 import com.velocitypowered.api.event.player.ServerConnectedEvent;
-import com.velocitypowered.api.event.proxy.ProxyPingEvent;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
-import com.velocitypowered.api.proxy.server.ServerPing;
-import com.velocitypowered.api.proxy.server.ServerPing.SamplePlayer;
-import com.velocitypowered.api.proxy.server.ServerPing.Version;
-import java.time.Duration;
-import java.time.Instant;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Optional;
@@ -28,7 +21,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
-import net.kyori.text.Component;
 import net.kyori.text.TextComponent;
 import net.kyori.text.format.TextColor;
 
@@ -37,7 +29,6 @@ public class ProxyLinkListener {
   private final ProxyLinkVelocity plugin;
   private final NetworkService networkService;
   private final Set<UUID> playerInBackend = Collections.newSetFromMap(new ConcurrentHashMap<>());
-  private final ServerPingCache pingCache = new ServerPingCache();
 
   public ProxyLinkListener(ProxyLinkVelocity plugin, NetworkService networkService) {
     this.plugin = plugin;
@@ -140,58 +131,6 @@ public class ProxyLinkListener {
 
   private Optional<RegisteredServer> toVelocityServer(BackendServer backendServer) {
     return plugin.getProxy().getServer(backendServer.getId());
-  }
-
-  @Subscribe
-  public void onPing(ProxyPingEvent e) {
-    try {
-      e.setPing(pingCache.getServerPing(e.getPing()));
-    } catch (ServiceException ex) {
-      ex.printStackTrace();
-      e.setPing(e.getPing().asBuilder()
-          .description(TextComponent.of("Failed to process your ping"))
-          .onlinePlayers(0)
-          .maximumPlayers(0)
-          .build());
-    }
-  }
-
-  private class ServerPingCache {
-
-    private Instant lastUpdate = Instant.EPOCH;
-    private Component description = TextComponent.of("Dummy");
-    private SamplePlayer[] hoverText = new SamplePlayer[0];
-    private int cachedLimit;
-    private int cachedOnline;
-
-    public ServerPing getServerPing(ServerPing original) throws ServiceException {
-      if (Duration.between(lastUpdate, Instant.now()).toMillis() < 1000) { // one second bounce off
-        return buildFromData(original);
-      }
-
-      NetworkPingData pingData = networkService.getPingData();
-      description = TextComponent.of(pingData.getDescription());
-      hoverText = pingData.getHoverMessage().stream()
-          .map(line -> new SamplePlayer(line, UUID.randomUUID()))
-          .toArray(SamplePlayer[]::new);
-
-      cachedOnline = networkService.getOnlineUserCount();
-      cachedLimit = networkService.getMaxPlayerCount();
-
-      lastUpdate = Instant.now();
-
-      return buildFromData(original);
-    }
-
-    public ServerPing buildFromData(ServerPing original) {
-      return original.asBuilder()
-          .description(description)
-          .samplePlayers(hoverText)
-          .maximumPlayers(cachedLimit)
-          .onlinePlayers(cachedOnline)
-          .version(new Version(original.getVersion().getProtocol(), "BXBW 1.8-1.15"))
-          .build();
-    }
   }
 
 }

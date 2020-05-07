@@ -11,7 +11,7 @@ public interface LinkedProxyServer extends Server {
   default int getMaxPlayerCount() {
     return HARD_PLAYER_LIMIT;
   }
-  
+
   Set<UUID> getOnlineUsers() throws ServiceException;
 
 }

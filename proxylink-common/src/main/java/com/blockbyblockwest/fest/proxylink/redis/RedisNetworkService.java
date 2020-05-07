@@ -6,11 +6,9 @@ import com.blockbyblockwest.fest.proxylink.ServerType;
 import com.blockbyblockwest.fest.proxylink.exception.ServiceException;
 import com.blockbyblockwest.fest.proxylink.models.BackendServer;
 import com.blockbyblockwest.fest.proxylink.models.LinkedProxyServer;
-import com.blockbyblockwest.fest.proxylink.models.NetworkPingData;
 import com.blockbyblockwest.fest.proxylink.redis.models.BackendServerResponse;
 import com.blockbyblockwest.fest.proxylink.redis.models.RedisBackendServer;
 import com.blockbyblockwest.fest.proxylink.redis.models.RedisLinkedProxyServer;
-import com.blockbyblockwest.fest.proxylink.redis.models.RedisPingData;
 import com.blockbyblockwest.fest.proxylink.redis.pubsub.LocalNetworkState;
 import com.blockbyblockwest.fest.proxylink.redis.pubsub.NetworkPubSub;
 import com.blockbyblockwest.fest.proxylink.redis.pubsub.packet.BackendServerRegisterPacket;
@@ -76,21 +74,6 @@ public class RedisNetworkService implements NetworkService {
         .zrangeByScore(NetworkKey.PROXY_SET, System.currentTimeMillis(), Double.POSITIVE_INFINITY)
         .stream()
         .map(id -> new RedisLinkedProxyServer(id, jedisPool)).collect(Collectors.toSet());
-  }
-
-  @Override
-  public NetworkPingData getPingData() throws ServiceException {
-    try (Jedis jedis = jedisPool.getResource()) {
-      Pipeline pipe = jedis.pipelined();
-
-      Response<String> description = pipe.get(NetworkKey.PING_DATA_DESCRIPTION);
-      Response<List<String>> hoverMessage = pipe.lrange(NetworkKey.PING_DATA_HOVER, 0, -1);
-      pipe.sync();
-
-      return new RedisPingData(jedisPool, description.get(), hoverMessage.get());
-    } catch (JedisException e) {
-      throw new ServiceException(e);
-    }
   }
 
   @Override
