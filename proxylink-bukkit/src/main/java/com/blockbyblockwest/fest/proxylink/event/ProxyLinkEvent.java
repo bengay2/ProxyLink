@@ -10,6 +10,7 @@ public class ProxyLinkEvent extends Event {
   private final Object event;
 
   public ProxyLinkEvent(Object event) {
+    super(true);
     this.event = event;
   }
 
