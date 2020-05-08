@@ -11,6 +11,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -26,6 +27,8 @@ public class ProxyLinkBukkit extends JavaPlugin {
   private final RedisBackend redisBackend = new RedisBackend();
   private final ScheduledExecutorService heartbeatExecutor = Executors
       .newSingleThreadScheduledExecutor();
+
+  private ScheduledFuture<?> heartbeatFuture;
 
   private NetworkService networkService;
   private ProfileService profileService;
@@ -52,10 +55,11 @@ public class ProxyLinkBukkit extends JavaPlugin {
       serverId = getConfig().getString("serverid");
       try {
         serverType = ServerType.valueOf(getConfig().getString("servertype"));
+
         networkService.registerServer(serverId, serverType,
             InetAddress.getLocalHost().getHostAddress(), Bukkit.getPort(), Bukkit.getMaxPlayers());
 
-        heartbeatExecutor.scheduleAtFixedRate(() -> {
+        heartbeatFuture = heartbeatExecutor.scheduleAtFixedRate(() -> {
           try {
             networkService.serverHeartBeat(serverId, Bukkit.getOnlinePlayers().size());
           } catch (ServiceException e) {
@@ -73,6 +77,9 @@ public class ProxyLinkBukkit extends JavaPlugin {
 
   @Override
   public void onDisable() {
+    if (heartbeatFuture != null) {
+      heartbeatFuture.cancel(true);
+    }
     heartbeatExecutor.shutdown();
     try {
       if (!heartbeatExecutor.awaitTermination(5, TimeUnit.SECONDS)) {

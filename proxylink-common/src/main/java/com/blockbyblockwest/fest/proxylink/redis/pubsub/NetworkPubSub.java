@@ -14,8 +14,11 @@ import com.blockbyblockwest.fest.proxylink.redis.pubsub.packet.UserKickPacket;
 import com.blockbyblockwest.fest.proxylink.redis.pubsub.packet.UserMessagePacket;
 import com.blockbyblockwest.fest.proxylink.redis.pubsub.packet.UserSwitchServerPacket;
 import com.blockbyblockwest.fest.proxylink.redis.pubsub.packet.UserSwitchServerRequestPacket;
+import java.util.logging.Logger;
 
 public class NetworkPubSub extends GenericPacketPubSub {
+
+  private static final Logger logger = Logger.getLogger(NetworkPubSub.class.getSimpleName());
 
   private final EventExecutor eventExecutor;
   private final LocalNetworkState localNetworkState;
@@ -26,7 +29,8 @@ public class NetworkPubSub extends GenericPacketPubSub {
 
     registerPacket(NetworkKey.SERVER_REGISTER, BackendServerRegisterPacket::new);
     registerPacket(NetworkKey.SERVER_UNREGISTER, BackendServerUnregisterPacket::new);
-    registerPacket(NetworkKey.SERVER_UPDATE_PLAYER_COUNT, BackendServerUpdatePlayerCountPacket::new);
+    registerPacket(NetworkKey.SERVER_UPDATE_PLAYER_COUNT,
+        BackendServerUpdatePlayerCountPacket::new);
 
     registerPacket(NetworkKey.NETWORK_BROADCAST, NetworkBroadcastPacket::new);
 
@@ -71,6 +75,9 @@ public class NetworkPubSub extends GenericPacketPubSub {
       RedisBackendServer serverInfo = localNetworkState.getServerInfo(playerCount.getServerId());
       if (serverInfo != null) {
         serverInfo.setPlayerCount(playerCount.getPlayerCount());
+      } else {
+        logger.warning("Got update player count, but server is not here locally: "
+            + playerCount.getServerId());
       }
 
     }
