@@ -13,7 +13,10 @@ import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.event.connection.LoginEvent;
 import com.velocitypowered.api.event.player.PlayerChooseInitialServerEvent;
 import com.velocitypowered.api.event.player.ServerConnectedEvent;
+import com.velocitypowered.api.event.proxy.ProxyPingEvent;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
+import com.velocitypowered.api.proxy.server.ServerPing;
+import com.velocitypowered.api.proxy.server.ServerPing.Version;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Optional;
@@ -42,7 +45,8 @@ public class ProxyLinkListener {
       return;
     }
 
-    if (plugin.getProxy().getPlayerCount() >= LinkedProxyServer.HARD_PLAYER_LIMIT) {
+    if (plugin.getProxy().getPlayerCount() >= LinkedProxyServer.HARD_PLAYER_LIMIT
+        && e.getPlayer().hasPermission("proxylink.slotbypass")) {
       e.setResult(ComponentResult.denied(TextComponent.of("Proxy is full", TextColor.RED)));
       return;
     }
@@ -131,6 +135,20 @@ public class ProxyLinkListener {
 
   private Optional<RegisteredServer> toVelocityServer(BackendServer backendServer) {
     return plugin.getProxy().getServer(backendServer.getId());
+  }
+
+  @Subscribe(order = PostOrder.LATE)
+  public void onPing(ProxyPingEvent e) {
+    ServerPing.Builder builder = e.getPing().asBuilder();
+
+    try {
+      builder.onlinePlayers(networkService.getOnlineUserCount());
+      builder.maximumPlayers(networkService.getMaxPlayerCount());
+      builder.version(new Version(builder.getVersion().getProtocol(), "BXBW 1.8-1.15"));
+      e.setPing(builder.build());
+    } catch (ServiceException ex) {
+      ex.printStackTrace();
+    }
   }
 
 }
