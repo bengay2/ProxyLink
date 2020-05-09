@@ -137,7 +137,7 @@ public class ProxyLinkListener {
     return plugin.getProxy().getServer(backendServer.getId());
   }
 
-  @Subscribe(order = PostOrder.LATE)
+  @Subscribe(order = PostOrder.LAST)
   public void onPing(ProxyPingEvent e) {
     ServerPing.Builder builder = e.getPing().asBuilder();
 
