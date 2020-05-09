@@ -44,6 +44,8 @@ public class RedisNetworkService implements NetworkService {
   private final NetworkPubSub pubSub;
   private final JedisPool jedisPool;
 
+  private boolean highFrequencyPackets = true;
+
   public RedisNetworkService(JedisPool jedisPool, EventExecutor eventExecutor) {
     this.jedisPool = jedisPool;
     pubSub = new NetworkPubSub(eventExecutor, localNetworkState, this);
@@ -51,12 +53,18 @@ public class RedisNetworkService implements NetworkService {
 
   @Override
   public void initialize() {
+    pubSub.registerPackets(highFrequencyPackets);
     pubSub.start(jedisPool);
   }
 
   @Override
   public void shutdown() {
     pubSub.teardown();
+  }
+
+  @Override
+  public void disableHighFrequencyPackets() {
+    highFrequencyPackets = false;
   }
 
   @Override

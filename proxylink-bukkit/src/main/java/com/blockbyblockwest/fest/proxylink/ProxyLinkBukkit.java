@@ -48,6 +48,7 @@ public class ProxyLinkBukkit extends JavaPlugin {
 
       networkService = new RedisNetworkService(redisBackend.getJedisPool(),
           new BukkitEventExecutor(getServer().getPluginManager()));
+      networkService.disableHighFrequencyPackets();
       networkService.initialize();
 
       profileService = new RedisProfileService(redisBackend.getJedisPool());

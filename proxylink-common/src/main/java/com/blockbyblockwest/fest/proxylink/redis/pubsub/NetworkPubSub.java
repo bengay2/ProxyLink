@@ -31,11 +31,16 @@ public class NetworkPubSub extends GenericPacketPubSub {
     this.eventExecutor = eventExecutor;
     this.localNetworkState = localNetworkState;
     this.networkService = networkService;
+  }
 
+  public void registerPackets(boolean highFrequencyPackets) {
     registerPacket(NetworkKey.SERVER_REGISTER, BackendServerRegisterPacket::new);
     registerPacket(NetworkKey.SERVER_UNREGISTER, BackendServerUnregisterPacket::new);
-    registerPacket(NetworkKey.SERVER_UPDATE_PLAYER_COUNT,
-        BackendServerUpdatePlayerCountPacket::new);
+
+    if (highFrequencyPackets) {
+      registerPacket(NetworkKey.SERVER_UPDATE_PLAYER_COUNT,
+          BackendServerUpdatePlayerCountPacket::new);
+    }
 
     registerPacket(NetworkKey.NETWORK_BROADCAST, NetworkBroadcastPacket::new);
 
@@ -44,7 +49,6 @@ public class NetworkPubSub extends GenericPacketPubSub {
     registerPacket(NetworkKey.USER_MESSAGE, UserMessagePacket::new);
     registerPacket(NetworkKey.USER_SWITCH_SERVER, UserSwitchServerPacket::new);
     registerPacket(NetworkKey.USER_SWITCH_SERVER_REQUEST, UserSwitchServerRequestPacket::new);
-
   }
 
   @Override

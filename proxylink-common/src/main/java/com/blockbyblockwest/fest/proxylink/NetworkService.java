@@ -23,6 +23,12 @@ public interface NetworkService {
   void shutdown();
 
   /**
+   * Makes this network service not listen to high frequency packets, improving performance by
+   * dropping some features of the API
+   */
+  void disableHighFrequencyPackets();
+
+  /**
    * The set of all proxies participating in this network and have not exceeded their heartbeat
    * timeout.
    *
