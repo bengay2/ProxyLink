@@ -1,7 +1,9 @@
 package com.blockbyblockwest.fest.proxylink.redis.pubsub;
 
 import com.blockbyblockwest.fest.proxylink.EventExecutor;
+import com.blockbyblockwest.fest.proxylink.exception.ServiceException;
 import com.blockbyblockwest.fest.proxylink.redis.NetworkKey;
+import com.blockbyblockwest.fest.proxylink.redis.RedisNetworkService;
 import com.blockbyblockwest.fest.proxylink.redis.models.RedisBackendServer;
 import com.blockbyblockwest.fest.proxylink.redis.pubsub.base.GenericPacketPubSub;
 import com.blockbyblockwest.fest.proxylink.redis.pubsub.base.packet.PubSubPacket;
@@ -22,10 +24,13 @@ public class NetworkPubSub extends GenericPacketPubSub {
 
   private final EventExecutor eventExecutor;
   private final LocalNetworkState localNetworkState;
+  private final RedisNetworkService networkService;
 
-  public NetworkPubSub(EventExecutor eventExecutor, LocalNetworkState localNetworkState) {
+  public NetworkPubSub(EventExecutor eventExecutor, LocalNetworkState localNetworkState,
+      RedisNetworkService networkService) {
     this.eventExecutor = eventExecutor;
     this.localNetworkState = localNetworkState;
+    this.networkService = networkService;
 
     registerPacket(NetworkKey.SERVER_REGISTER, BackendServerRegisterPacket::new);
     registerPacket(NetworkKey.SERVER_UNREGISTER, BackendServerUnregisterPacket::new);
@@ -78,6 +83,13 @@ public class NetworkPubSub extends GenericPacketPubSub {
       } else {
         logger.warning("Got update player count, but server is not here locally: "
             + playerCount.getServerId());
+        logger.info("Syncing...");
+        try {
+          networkService.getServers();
+        } catch (ServiceException e) {
+          e.printStackTrace();
+        }
+        logger.info("Resynced.");
       }
 
     }

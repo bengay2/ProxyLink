@@ -46,7 +46,7 @@ public class RedisNetworkService implements NetworkService {
 
   public RedisNetworkService(JedisPool jedisPool, EventExecutor eventExecutor) {
     this.jedisPool = jedisPool;
-    pubSub = new NetworkPubSub(eventExecutor, localNetworkState);
+    pubSub = new NetworkPubSub(eventExecutor, localNetworkState, this);
   }
 
   @Override
