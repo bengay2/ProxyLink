@@ -19,7 +19,7 @@ public class BackendServerResponse {
   public Optional<RedisBackendServer> toServer() {
     Map<String, String> serverInfo = responseMap.get();
 
-    if (serverInfo.isEmpty() || !serverInfo.containsKey(NetworkKey.SERVER_TYPE)) {
+    if (serverInfo.isEmpty() || serverInfo.get(NetworkKey.SERVER_TYPE) == null) {
       return Optional.empty();
     }
 
