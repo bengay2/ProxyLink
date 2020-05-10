@@ -1,5 +1,6 @@
 package com.blockbyblockwest.fest.proxylink;
 
+import com.blockbyblockwest.fest.proxylink.command.HubCommand;
 import com.blockbyblockwest.fest.proxylink.command.SendCommand;
 import com.blockbyblockwest.fest.proxylink.config.Config;
 import com.blockbyblockwest.fest.proxylink.event.VelocityEventExecutor;
@@ -123,6 +124,7 @@ public class ProxyLinkVelocity {
     proxy.getEventManager().register(this, new ProfileUpdateListener(profileService));
 
     commandManager.register("send", new SendCommand(this));
+    commandManager.register("hub", new HubCommand(this));
   }
 
   @Subscribe
