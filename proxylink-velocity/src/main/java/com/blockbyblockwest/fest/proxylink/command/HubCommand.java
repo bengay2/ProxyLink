@@ -42,11 +42,11 @@ public class HubCommand implements Command {
                       .min(Comparator.comparingInt(BackendServer::getPlayerCount));
 
                   if (hubServer.isPresent()) {
-                    plugin.getProxy().getServer(backendServer.getId()).ifPresent(
-                        registeredServer -> player.createConnectionRequest(registeredServer)
-                            .fireAndForget());
                     player.sendMessage(
                         TextComponent.of("Connecting you to a hub..").color(TextColor.GREEN));
+                    plugin.getProxy().getServer(hubServer.get().getId()).ifPresent(
+                        registeredServer -> player.createConnectionRequest(registeredServer)
+                            .fireAndForget());
                   } else {
                     player.sendMessage(
                         TextComponent.of("There are no hub servers available!")
