@@ -29,11 +29,14 @@ public class ProxyLinkBukkit extends JavaPlugin {
       .newSingleThreadScheduledExecutor();
 
   private ScheduledFuture<?> heartbeatFuture;
+  private ScheduledFuture<?> playercountUpdateFuture;
 
   private NetworkService networkService;
   private ProfileService profileService;
   private String serverId;
   private ServerType serverType;
+
+  private NetworkPlayerCount networkPlayerCount;
 
   @Override
   public void onEnable() {
@@ -67,6 +70,11 @@ public class ProxyLinkBukkit extends JavaPlugin {
             e.printStackTrace();
           }
         }, 0, 2, TimeUnit.SECONDS);
+
+        networkPlayerCount = new NetworkPlayerCount(networkService);
+
+        playercountUpdateFuture = heartbeatExecutor
+            .scheduleAtFixedRate(() -> networkPlayerCount.update(), 0, 4, TimeUnit.SECONDS);
       } catch (IllegalArgumentException | UnknownHostException ex) {
         throw new ServiceException("Invalid config");
       }
@@ -80,6 +88,9 @@ public class ProxyLinkBukkit extends JavaPlugin {
   public void onDisable() {
     if (heartbeatFuture != null) {
       heartbeatFuture.cancel(true);
+    }
+    if (playercountUpdateFuture != null) {
+      playercountUpdateFuture.cancel(true);
     }
     heartbeatExecutor.shutdown();
     try {
@@ -115,6 +126,10 @@ public class ProxyLinkBukkit extends JavaPlugin {
 
   public ProfileService getProfileService() {
     return profileService;
+  }
+
+  public NetworkPlayerCount getNetworkPlayerCount() {
+    return networkPlayerCount;
   }
 
 }
