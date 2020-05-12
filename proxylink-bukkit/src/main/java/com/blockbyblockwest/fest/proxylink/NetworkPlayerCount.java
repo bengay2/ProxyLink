@@ -14,7 +14,7 @@ public class NetworkPlayerCount {
 
   public void update() {
     try {
-      playerCount.set(networkService.getMaxPlayerCount());
+      playerCount.set(networkService.getOnlineUserCount());
     } catch (ServiceException e) {
       e.printStackTrace();
     }
