@@ -43,7 +43,9 @@ public class HubCommand implements Command {
 
                   if (hubServer.isPresent()) {
                     player.sendMessage(
-                        TextComponent.of("Connecting you to a hub..").color(TextColor.GREEN));
+                        TextComponent
+                            .of("Connecting you to a hub.. (" + hubServer.get().getId() + ")")
+                            .color(TextColor.GREEN));
                     plugin.getProxy().getServer(hubServer.get().getId()).ifPresent(
                         registeredServer -> player.createConnectionRequest(registeredServer)
                             .fireAndForget());
