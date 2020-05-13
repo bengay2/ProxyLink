@@ -13,20 +13,20 @@ public class RedisBackend {
 
   private JedisPool jedisPool;
 
-  public void initialize(Credentials cred) throws ServiceException {
+  public void initialize(JedisConfig cred) throws ServiceException {
 
     if (initialized.compareAndSet(false, true)) {
       JedisPoolConfig poolConfig = new JedisPoolConfig();
-      poolConfig.setMaxTotal(20);
-      poolConfig.setMaxIdle(5);
-      poolConfig.setMinIdle(1);
+      poolConfig.setMaxTotal(cred.getMaxPoolSize());
+      poolConfig.setMaxIdle(cred.getMaxPoolIdleSize());
+      poolConfig.setMinIdle(cred.getMinPoolIdleSize());
       poolConfig.setBlockWhenExhausted(true);
 
       if (cred.getPassword() == null || cred.getPassword().isEmpty()) {
-        jedisPool = new JedisPool(poolConfig, cred.getHost(), cred.getPort(), 2000, null,
+        jedisPool = new JedisPool(poolConfig, cred.getHost(), cred.getPort(), 10000, null,
             cred.getDatabase(), cred.isSsl());
       } else {
-        jedisPool = new JedisPool(poolConfig, cred.getHost(), cred.getPort(), 2000,
+        jedisPool = new JedisPool(poolConfig, cred.getHost(), cred.getPort(), 10000,
             cred.getPassword(), cred.getDatabase(), cred.isSsl());
       }
 

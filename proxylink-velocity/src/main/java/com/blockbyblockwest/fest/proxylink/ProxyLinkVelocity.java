@@ -11,7 +11,7 @@ import com.blockbyblockwest.fest.proxylink.listener.RemoteEventListener;
 import com.blockbyblockwest.fest.proxylink.models.BackendServer;
 import com.blockbyblockwest.fest.proxylink.models.LinkedProxyServer;
 import com.blockbyblockwest.fest.proxylink.profile.ProfileService;
-import com.blockbyblockwest.fest.proxylink.redis.Credentials;
+import com.blockbyblockwest.fest.proxylink.redis.JedisConfig;
 import com.blockbyblockwest.fest.proxylink.redis.RedisBackend;
 import com.blockbyblockwest.fest.proxylink.redis.RedisNetworkService;
 import com.blockbyblockwest.fest.proxylink.redis.profile.RedisProfileService;
@@ -81,9 +81,12 @@ public class ProxyLinkVelocity {
     this.serverId = config.getNode("proxyid").getString();
     try {
       ConfigurationNode redisNode = config.getNode("redis");
-      redisBackend.initialize(new Credentials(redisNode.getNode("host").getString(),
+      redisBackend.initialize(new JedisConfig(redisNode.getNode("host").getString(),
           redisNode.getNode("password").getString(), redisNode.getNode("database").getInt(),
-          redisNode.getNode("port").getInt(), redisNode.getNode("ssl").getBoolean()));
+          redisNode.getNode("port").getInt(), redisNode.getNode("ssl").getBoolean(),
+          redisNode.getNode("max-pool-size").getInt(),
+          redisNode.getNode("max-pool-idle-size").getInt(),
+          redisNode.getNode("min-pool-idle-size").getInt()));
 
       networkService = new RedisNetworkService(redisBackend.getJedisPool(),
           new VelocityEventExecutor(proxy.getEventManager()));

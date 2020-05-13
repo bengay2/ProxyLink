@@ -3,7 +3,7 @@ package com.blockbyblockwest.fest.proxylink;
 import com.blockbyblockwest.fest.proxylink.event.BukkitEventExecutor;
 import com.blockbyblockwest.fest.proxylink.exception.ServiceException;
 import com.blockbyblockwest.fest.proxylink.profile.ProfileService;
-import com.blockbyblockwest.fest.proxylink.redis.Credentials;
+import com.blockbyblockwest.fest.proxylink.redis.JedisConfig;
 import com.blockbyblockwest.fest.proxylink.redis.RedisBackend;
 import com.blockbyblockwest.fest.proxylink.redis.RedisNetworkService;
 import com.blockbyblockwest.fest.proxylink.redis.profile.RedisProfileService;
@@ -45,9 +45,10 @@ public class ProxyLinkBukkit extends JavaPlugin {
     saveDefaultConfig();
 
     try {
-      redisBackend.initialize(new Credentials(getConfig().getString("redis.host"),
+      redisBackend.initialize(new JedisConfig(getConfig().getString("redis.host"),
           getConfig().getString("redis.password"), getConfig().getInt("redis.database"),
-          getConfig().getInt("redis.port"), getConfig().getBoolean("redis.ssl")));
+          getConfig().getInt("redis.port"), getConfig().getBoolean("redis.ssl"), 20,
+          10, 5));
 
       networkService = new RedisNetworkService(redisBackend.getJedisPool(),
           new BukkitEventExecutor(getServer().getPluginManager()));

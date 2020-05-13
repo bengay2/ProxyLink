@@ -2,7 +2,7 @@ package com.blockbyblockwest.fest.proxylink.redis;
 
 import java.util.Objects;
 
-public class Credentials {
+public class JedisConfig {
 
   private final String host;
   private final String password;
@@ -10,12 +10,20 @@ public class Credentials {
   private final int port;
   private final boolean ssl;
 
-  public Credentials(String host, String password, int database, int port, boolean ssl) {
+  private final int maxPoolSize;
+  private final int maxPoolIdleSize;
+  private final int minPoolIdleSize;
+
+  public JedisConfig(String host, String password, int database, int port, boolean ssl,
+      int maxPoolSize, int maxPoolIdleSize, int minPoolIdleSize) {
     this.host = host;
     this.password = password;
     this.database = database;
     this.port = port;
     this.ssl = ssl;
+    this.maxPoolSize = maxPoolSize;
+    this.maxPoolIdleSize = maxPoolIdleSize;
+    this.minPoolIdleSize = minPoolIdleSize;
   }
 
   public String getHost() {
@@ -38,6 +46,18 @@ public class Credentials {
     return ssl;
   }
 
+  public int getMaxPoolSize() {
+    return maxPoolSize;
+  }
+
+  public int getMaxPoolIdleSize() {
+    return maxPoolIdleSize;
+  }
+
+  public int getMinPoolIdleSize() {
+    return minPoolIdleSize;
+  }
+
   @Override
   public String toString() {
     return "Credentials{" +
@@ -57,7 +77,7 @@ public class Credentials {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    Credentials that = (Credentials) o;
+    JedisConfig that = (JedisConfig) o;
     return getDatabase() == that.getDatabase() &&
         getPort() == that.getPort() &&
         isSsl() == that.isSsl() &&
