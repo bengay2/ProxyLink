@@ -12,6 +12,7 @@ import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.server.ServerInfo;
 import java.net.InetSocketAddress;
+import net.kyori.text.TextComponent;
 import net.kyori.text.serializer.gson.GsonComponentSerializer;
 import net.kyori.text.serializer.legacy.LegacyComponentSerializer;
 
@@ -77,9 +78,10 @@ public class RemoteEventListener {
 
   @Subscribe
   public void onBroadcast(NetworkBroadcastEvent e) {
+    TextComponent message = LegacyComponentSerializer.legacy().deserialize(e.getMessage());
     for (Player player : plugin.getProxy().getAllPlayers()) {
       if (e.getPermission().isEmpty() || player.hasPermission(e.getPermission())) {
-        player.sendMessage(LegacyComponentSerializer.legacy().deserialize(e.getMessage()));
+        player.sendMessage(message);
       }
     }
   }

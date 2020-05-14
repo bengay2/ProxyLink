@@ -1,5 +1,6 @@
 package com.blockbyblockwest.fest.proxylink;
 
+import com.blockbyblockwest.fest.proxylink.command.BroadcastCommand;
 import com.blockbyblockwest.fest.proxylink.command.HubCommand;
 import com.blockbyblockwest.fest.proxylink.command.SendCommand;
 import com.blockbyblockwest.fest.proxylink.command.StaffChatCommand;
@@ -134,6 +135,7 @@ public class ProxyLinkVelocity {
     commandManager.register("send", new SendCommand(this));
     commandManager.register("hub", new HubCommand(this));
     commandManager.register("staffchat", new StaffChatCommand(this), "sc");
+    commandManager.register("broadcast", new BroadcastCommand(this), "alert");
   }
 
   @Subscribe
