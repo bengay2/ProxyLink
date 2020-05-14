@@ -121,6 +121,7 @@ public class ProxyLinkVelocity {
 
     } catch (ServiceException e) {
       e.printStackTrace();
+      System.exit(1);
     }
 
     proxy.getEventManager().register(this, new ProxyLinkListener(this, networkService));
