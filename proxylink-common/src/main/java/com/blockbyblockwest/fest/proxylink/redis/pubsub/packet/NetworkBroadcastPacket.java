@@ -21,7 +21,7 @@ public class NetworkBroadcastPacket extends PubSubPacket {
   public void read(String msg) {
     String[] split = ESCAPING_COLON.split(msg);
     message = reverseEscaping(split[0]);
-    permission = split[1];
+    permission = split.length > 1 ? split[1] : "";
   }
 
   @Override
