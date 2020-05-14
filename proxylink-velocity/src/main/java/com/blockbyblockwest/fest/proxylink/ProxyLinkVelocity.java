@@ -24,12 +24,15 @@ import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
 import com.velocitypowered.api.plugin.Plugin;
 import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.ProxyServer;
+import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
 import com.velocitypowered.api.scheduler.ScheduledTask;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.file.Path;
+import java.util.Comparator;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import ninja.leaping.configurate.ConfigurationNode;
 import org.slf4j.Logger;
@@ -180,6 +183,16 @@ public class ProxyLinkVelocity {
 
   public OnlinePlayerNames getOnlinePlayerNames() {
     return onlinePlayerNames;
+  }
+
+  public Optional<RegisteredServer> toVelocityServer(BackendServer backendServer) {
+    return getProxy().getServer(backendServer.getId());
+  }
+
+  public Optional<? extends BackendServer> findHubWithLeastPlayers() throws ServiceException {
+    return networkService.getServers().stream()
+        .filter(server -> server.getServerType() == ServerType.HUB)
+        .min(Comparator.comparingInt(BackendServer::getPlayerCount));
   }
 
 }

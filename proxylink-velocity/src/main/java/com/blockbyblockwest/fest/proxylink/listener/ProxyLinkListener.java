@@ -2,24 +2,21 @@ package com.blockbyblockwest.fest.proxylink.listener;
 
 import com.blockbyblockwest.fest.proxylink.NetworkService;
 import com.blockbyblockwest.fest.proxylink.ProxyLinkVelocity;
-import com.blockbyblockwest.fest.proxylink.ServerType;
 import com.blockbyblockwest.fest.proxylink.exception.ServiceException;
-import com.blockbyblockwest.fest.proxylink.models.BackendServer;
 import com.blockbyblockwest.fest.proxylink.models.LinkedProxyServer;
 import com.velocitypowered.api.event.PostOrder;
 import com.velocitypowered.api.event.ResultedEvent.ComponentResult;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.event.connection.LoginEvent;
+import com.velocitypowered.api.event.player.KickedFromServerEvent;
+import com.velocitypowered.api.event.player.KickedFromServerEvent.RedirectPlayer;
 import com.velocitypowered.api.event.player.PlayerChooseInitialServerEvent;
 import com.velocitypowered.api.event.player.ServerConnectedEvent;
 import com.velocitypowered.api.event.proxy.ProxyPingEvent;
-import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerPing;
 import com.velocitypowered.api.proxy.server.ServerPing.Version;
 import java.util.Collections;
-import java.util.Comparator;
-import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -122,10 +119,8 @@ public class ProxyLinkListener {
   @Subscribe
   public void onChooseFirstServer(PlayerChooseInitialServerEvent e) {
     try {
-      networkService.getServers().stream()
-          .filter(server -> server.getServerType() == ServerType.HUB)
-          .min(Comparator.comparingInt(BackendServer::getPlayerCount))
-          .flatMap(this::toVelocityServer)
+      plugin.findHubWithLeastPlayers()
+          .flatMap(plugin::toVelocityServer)
           .ifPresent(e::setInitialServer);
     } catch (ServiceException ex) {
       ex.printStackTrace();
@@ -133,8 +128,20 @@ public class ProxyLinkListener {
     }
   }
 
-  private Optional<RegisteredServer> toVelocityServer(BackendServer backendServer) {
-    return plugin.getProxy().getServer(backendServer.getId());
+  @Subscribe
+  public void onKick(KickedFromServerEvent e) {
+    // Kicked during server connect is not subject to movement
+    if (e.kickedDuringServerConnect()) {
+      return;
+    }
+    try {
+      plugin.findHubWithLeastPlayers()
+          .flatMap(plugin::toVelocityServer)
+          .ifPresent(hubServer -> e.setResult(RedirectPlayer.create(hubServer)));
+    } catch (ServiceException ex) {
+      ex.printStackTrace();
+    }
+
   }
 
   @Subscribe(order = PostOrder.LAST)

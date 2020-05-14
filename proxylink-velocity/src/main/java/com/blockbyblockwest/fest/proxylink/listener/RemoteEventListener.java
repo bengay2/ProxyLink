@@ -7,14 +7,11 @@ import com.blockbyblockwest.fest.proxylink.event.backendserver.BackendServerUnre
 import com.blockbyblockwest.fest.proxylink.event.user.UserKickEvent;
 import com.blockbyblockwest.fest.proxylink.event.user.UserMessageEvent;
 import com.blockbyblockwest.fest.proxylink.event.user.UserSwitchServerRequestEvent;
-import com.blockbyblockwest.fest.proxylink.models.BackendServer;
 import com.blockbyblockwest.fest.proxylink.user.MessageType;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.proxy.Player;
-import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.proxy.server.ServerInfo;
 import java.net.InetSocketAddress;
-import java.util.Optional;
 import net.kyori.text.serializer.gson.GsonComponentSerializer;
 import net.kyori.text.serializer.legacy.LegacyComponentSerializer;
 
@@ -28,7 +25,7 @@ public class RemoteEventListener {
 
   @Subscribe
   public void onServerRegister(BackendServerRegisterEvent e) {
-    toVelocityServer(e.getBackendServer())
+    plugin.toVelocityServer(e.getBackendServer())
         .ifPresent(found -> plugin.getProxy().unregisterServer(found.getServerInfo()));
 
     plugin.getLogger().info("Registering {}", e.getBackendServer());
@@ -54,9 +51,6 @@ public class RemoteEventListener {
 
   }
 
-  private Optional<RegisteredServer> toVelocityServer(BackendServer backendServer) {
-    return plugin.getProxy().getServer(backendServer.getId());
-  }
 
   @Subscribe
   public void onUserMessage(UserMessageEvent e) {
